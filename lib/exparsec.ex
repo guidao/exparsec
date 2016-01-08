@@ -15,6 +15,8 @@ defmodule Exparsec do
             false ->
               {:error, "not match", state}
           end
+        [] ->
+          {:error,"not match", state}
       end
 
     end}
