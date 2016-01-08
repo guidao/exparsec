@@ -4,6 +4,9 @@ end
 
 defmodule Exparsec do
   require State
+  require Exparsec.Combo
+  import Exparsec.Combo
+  import Exparsec.Prim
 
   def return(fun) do
     {:parser, fn(state)->
@@ -20,18 +23,6 @@ defmodule Exparsec do
       end
 
     end}
-  end
-
-  def oneof(input) do
-    fn(x)->
-      x in input 
-    end
-  end
-
-  def noneof(input) do
-    fn(x)->
-      !(x in input)
-    end
   end
 
   def char(input) do
@@ -51,8 +42,8 @@ defmodule Exparsec do
   end
 
   def atom do
-    first = orelse letter, symbol
-    rest = many(orelse(letter, orelse(digit, symbol)))
+    first = orelse &letter/0, &symbol/0
+    rest = many(orelse(&letter/0, orelse(&digit/0, &symbol/0)))
     combo first, rest
   end
 
@@ -65,103 +56,36 @@ defmodule Exparsec do
     return(oneof ' \t')
   end
 
+  def spaces do
+    many1(space)
+  end
   def number do
     many1(digit)
   end
 
   def expr do
-    orelse(atom, orelse(string, number))
+    kuo = char '('
+    kuo2 = char ')'
+    list = orelse(&parseList/0, &parseDottedList/0)
+    com = combo(kuo, combo(list, kuo2))
+    orelse(&atom/0, orelse(&string/0, orelse(&number/0, orelse(&parseQuote/0, com))))
   end
 
   def parseList do
-    sepBy(expr, space)
+    sepBy(&expr/0, &space/0)
   end
 
-  def skipMany(test) do
-    {:parser, fn(state)->
-      case state.input do
-        [c|cs] ->
-          case test.(c) do
-            true ->
-              runP(skipMany(test), %State{state|input: cs})
-            false ->
-              {:ok, [], state}
-          end
-        [] ->
-          {:ok, [], state} 
-      end
-    end}
+  def parseDottedList do
+    head = endBy &expr/0, &spaces/0
+    tail = combo(char('.'), combo(&spaces/0, &expr/0))
+    combo head, tail
   end
 
-  def many({:parser, _}=p) do
-    {:parser, fn(state)->
-      case runP(p, state) do
-        {:ok, val, nstate} ->
-          fix_return(val,runP(p, nstate))
-        error ->
-          error
-      end
-    end}
+  def parseQuote do
+    combo(char('\''), &expr/0)
   end
 
-  def many(test) do
-    {:parser, fn(state)->
-      case state.input do
-        [c|cs] ->
-          case test.(c) do
-            true ->
-              fix_return(c, runP(many(test), %State{state|input: cs}))
-            false ->
-              {:ok, [], state}
-          end
-        [] ->
-          {:ok, [], state}
-      end
-    end}
-  end
 
-  def many1(p) do
-    {:parser, fn(state)->
-      case runP(p, state) do
-        {:ok, val, nstate} ->
-          fix_return(val, runP(many(p), nstate))
-        error ->
-          error
-      end
-    end}
-  end
-
-  def sepBy(p, sep) do
-    {:parser, fn(state)->
-      case runP(p, state) do
-        {:ok, val, nstate} ->
-          case runP(sep, nstate) do
-            {:ok, val2, nstate2} ->
-              fix_return(val++val2, runP(sepBy(p, sep), nstate2))
-            {:error, reason, nstate2} ->
-              {:ok, [], nstate2}
-          end
-        error ->
-          error
-      end
-    end}
-  end
-
-  def endBy(p, sep) do
-    {:parser, fn(state)->
-      case runP(sepBy(p, sep), state) do
-        {:ok, val, nstate} ->
-          case runP(sep, nstate) do
-            {:ok, _, _} = ok ->
-              fix_return(val, ok)
-            error ->
-              error
-          end
-        error ->
-          error
-      end
-    end}
-  end
 
   def fix_return([_|_] = c, {:ok, val, state}) do
     {:ok, c ++ val, state}
@@ -176,32 +100,11 @@ defmodule Exparsec do
   def runP({:parser, f},%State{}=state) do
     f.(state)
   end
+  def runP(fun, state) when is_function(fun) do
+    runP(fun.(), state)
+  end
   
-  def combo(p, x) do
-    {:parser, fn(state)->
-      case runP(p, state) do
-        {:ok, val, nstate} ->
-          IO.puts "pval:#{inspect val}"
-          runP(x, nstate)
-        error ->
-          error
-      end
-
-    end}
-  end
-
-  def orelse(p, x) do
-    {:parser, fn(state)->
-      case runP(p, state) do
-        {:error, "not match", state} ->
-          runP(x, state)
-        ok ->
-          ok
-      end
-    end}
-  end
-
-  def parse(p, name , input) do
+    def parse(p, name , input) do
     runP(p, initState(input))
   end
 

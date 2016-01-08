@@ -2,6 +2,8 @@ defmodule ExparsecTest do
   use ExUnit.Case
   doctest Exparsec
   import Exparsec
+  import Exparsec.Combo
+  import Exparsec.Prim
 
   test "the truth" do
     assert 1 + 1 == 2
@@ -64,12 +66,16 @@ defmodule ExparsecTest do
     read_expr expr, 'abc'
     read_expr expr, '123'
     read_expr expr, '"adwe23gw"'
+    read_expr expr, '(a b c)'
+    read_expr expr, '(1 2 3)'
+    read_expr expr, '(a b . c d)'
+    read_expr expr, '\'(1 2 3)'
   end
 
   test "parseList" do
     read_expr parseList, 'ab cd ef'
     read_expr parseList, '12 34 ad'
-    read_expr parseList, '(12 ab)'
+    #read_expr parseList, '(12 ab)'
   end
 
 end
