@@ -38,32 +38,38 @@ defmodule ExparsecTest do
   end
 
   test "many" do
-    number = oneof '1234567890'
-    numbers = many number
+    n = oneof '1234567890'
+    numbers = many n
     read_expr numbers, '123'
     read_expr numbers, 'a123'
     read_expr numbers, '123a'
   end
 
   test "string" do
-    c = char '"'
-    com = combo(c,combo(many(noneof('"')),c))
-    read_expr com, '"abcd"'
+    read_expr string, '"abcd"'
   end
 
   test "atom" do
-    first = orelse letter, symbol
-    rest = many(orelse(letter, orelse(digit, symbol)))
-    com = combo first, rest
-    read_expr com, 'abcd'
-    read_expr com, '$ab'
+    read_expr atom, 'abcd'
+    read_expr atom, '$ab'
   end
 
   test "number" do
-    number = many1(digit)
     read_expr number, 'a'
     read_expr number, '123'
     read_expr number, '12ad'
+  end
+
+  test "expr" do
+    read_expr expr, 'abc'
+    read_expr expr, '123'
+    read_expr expr, '"adwe23gw"'
+  end
+
+  test "parseList" do
+    read_expr parseList, 'ab cd ef'
+    read_expr parseList, '12 34 ad'
+    read_expr parseList, '(12 ab)'
   end
 
 end

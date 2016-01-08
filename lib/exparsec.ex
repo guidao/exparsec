@@ -48,7 +48,32 @@ defmodule Exparsec do
     return(oneof '0123456789')
   end
 
+  def atom do
+    first = orelse letter, symbol
+    rest = many(orelse(letter, orelse(digit, symbol)))
+    combo first, rest
+  end
 
+  def string do
+    c = char '"'
+    combo(c, combo(many(noneof('"')), c))
+  end
+
+  def space do
+    return(oneof ' \t')
+  end
+
+  def number do
+    many1(digit)
+  end
+
+  def expr do
+    orelse(atom, orelse(string, number))
+  end
+
+  def parseList do
+    sepBy(expr, space)
+  end
 
   def skipMany(test) do
     {:parser, fn(state)->
@@ -104,6 +129,37 @@ defmodule Exparsec do
     end}
   end
 
+  def sepBy(p, sep) do
+    {:parser, fn(state)->
+      case runP(p, state) do
+        {:ok, val, nstate} ->
+          case runP(sep, nstate) do
+            {:ok, val2, nstate2} ->
+              fix_return(val++val2, runP(sepBy(p, sep), nstate2))
+            {:error, reason, nstate2} ->
+              {:ok, [], nstate2}
+          end
+        error ->
+          error
+      end
+    end}
+  end
+
+  def endBy(p, sep) do
+    {:parser, fn(state)->
+      case runP(sepBy(p, sep), state) do
+        {:ok, val, nstate} ->
+          case runP(sep, nstate) do
+            {:ok, _, _} = ok ->
+              fix_return(val, ok)
+            error ->
+              error
+          end
+        error ->
+          error
+      end
+    end}
+  end
 
   def fix_return([_|_] = c, {:ok, val, state}) do
     {:ok, c ++ val, state}
