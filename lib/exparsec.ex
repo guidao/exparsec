@@ -42,7 +42,8 @@ defmodule Exparsec do
   end
 
   def atom do
-    first = orelse &letter/0, &symbol/0
+    first = (&letter/0) <|> (&symbol/0)
+    rest = many((&letter/0) <|> (&digit/0) <|> (&symbol/0))
     rest = many(orelse(&letter/0, orelse(&digit/0, &symbol/0)))
     combo first, rest
   end
@@ -104,7 +105,7 @@ defmodule Exparsec do
     runP(fun.(), state)
   end
   
-    def parse(p, name , input) do
+  def parse(p, name , input) do
     runP(p, initState(input))
   end
 

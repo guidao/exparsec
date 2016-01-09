@@ -98,6 +98,10 @@ defmodule Exparsec.Combo do
     end}
   end
 
+  defmacro p >>> x do
+    quote do: combo(unquote(p), unquote(x))
+  end
+
   def orelse(p, x) do
     {:parser, fn(state)->
       case Exparsec.runP(p, state) do
@@ -109,4 +113,7 @@ defmodule Exparsec.Combo do
     end}
   end
 
+  defmacro p <|> x do
+    quote do: orelse(unquote(p), unquote(x))
+  end
 end
