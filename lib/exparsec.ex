@@ -7,23 +7,7 @@ defmodule Exparsec do
   require Exparsec.Combo
   import Exparsec.Combo
   import Exparsec.Prim
-
-  def return(fun) do
-    {:parser, fn(state)->
-      case state.input do
-        [c|cs] ->
-          case fun.(c) do
-            true ->
-              {:ok, [c], %State{state|input: cs}}
-            false ->
-              {:error, "not match", state}
-          end
-        [] ->
-          {:error,"not match", state}
-      end
-
-    end}
-  end
+  import Exparsec.Util
 
   def char(input) do
     input |> oneof |> return
@@ -44,13 +28,13 @@ defmodule Exparsec do
   def atom do
     first = (&letter/0) <|> (&symbol/0)
     rest = many((&letter/0) <|> (&digit/0) <|> (&symbol/0))
-    rest = many(orelse(&letter/0, orelse(&digit/0, &symbol/0)))
-    combo first, rest
+    first >>> rest
   end
 
   def string do
     c = char '"'
-    combo(c, combo(many(noneof('"')), c))
+    str = noneof('"') |> return
+    c >>> str >>> c
   end
 
   def space do
@@ -65,11 +49,13 @@ defmodule Exparsec do
   end
 
   def expr do
-    kuo = char '('
-    kuo2 = char ')'
-    list = orelse(&parseList/0, &parseDottedList/0)
-    com = combo(kuo, combo(list, kuo2))
-    orelse(&atom/0, orelse(&string/0, orelse(&number/0, orelse(&parseQuote/0, com))))
+    left = char '('
+    right = char ')'
+
+    list = (&parseList/0) <|> (&parseDottedList/0)
+    com = left >>> list >>> right
+
+    (&atom/0) <|> (&string/0) <|> (&number/0) <|> (&parseQuote/0) <|> com
   end
 
   def parseList do
@@ -78,33 +64,16 @@ defmodule Exparsec do
 
   def parseDottedList do
     head = endBy &expr/0, &spaces/0
-    tail = combo(char('.'), combo(&spaces/0, &expr/0))
-    combo head, tail
+    tail = char('.') >>> (&spaces/0) >>> (&expr/0)
+    head >>> tail
   end
 
   def parseQuote do
-    combo(char('\''), &expr/0)
+    char('\'') >>> (&expr/0)
   end
 
 
 
-  def fix_return([_|_] = c, {:ok, val, state}) do
-    {:ok, c ++ val, state}
-  end
-  def fix_return(c, {:ok, val, state}) do
-    {:ok, [c|val], state}
-  end
-  def fix_return(c, {:error, reason, state}) do
-    {:ok, [c], state}
-  end
-  
-  def runP({:parser, f},%State{}=state) do
-    f.(state)
-  end
-  def runP(fun, state) when is_function(fun) do
-    runP(fun.(), state)
-  end
-  
   def parse(p, name , input) do
     runP(p, initState(input))
   end
@@ -113,7 +82,6 @@ defmodule Exparsec do
   def initState(input) do
     %State{input: input}
   end
-
 
 end
 

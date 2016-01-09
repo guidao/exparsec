@@ -1,9 +1,11 @@
 defmodule ExparsecTest do
   use ExUnit.Case
   doctest Exparsec
+
   import Exparsec
   import Exparsec.Combo
   import Exparsec.Prim
+  import Exparsec.Util
 
   test "the truth" do
     assert 1 + 1 == 2
@@ -29,7 +31,7 @@ defmodule ExparsecTest do
 
   test "skipmany" do
     space = oneof ' \t'
-    spaces = skipMany space
+    spaces = skipMany(return(space))
     read_expr spaces, '  '
     read_expr spaces, '    3'
     read_expr spaces, '1'
@@ -41,7 +43,7 @@ defmodule ExparsecTest do
 
   test "many" do
     n = oneof '1234567890'
-    numbers = many n
+    numbers = many(return(n))
     read_expr numbers, '123'
     read_expr numbers, 'a123'
     read_expr numbers, '123a'
