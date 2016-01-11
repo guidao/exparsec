@@ -33,18 +33,25 @@ defmodule Exparsec.Util do
   end
 
  
-
-  def fix_return([_|_] = c, {:ok, val, state}) do
+  def fix_return([c], {:ok, [val], state}) do
     IO.puts "c:#{inspect c}, val:#{inspect val}"
-    {:ok, c ++ val, state}
+    case val do
+      [_|_] when is_list(c) ->
+        {:ok, [c ++ val], state}
+      [_|_] ->
+        {:ok, [[c] ++ val], state}
+      _ when is_list(c) ->
+        {:ok, [c ++ [val]], state}
+      _ ->
+        {:ok, [[c, val]], state}
+    end
   end
-  def fix_return(c, {:ok, val, state}) do
-    IO.puts "c:#{inspect c}, val:#{inspect val}"
-    {:ok, [c|val], state}
+  def fix_return(c, {:ok, [val], state}) do
+    {:ok, [val] ++ c, state}
   end
   def fix_return(c, {:error, reason, state}) do
     IO.puts "c:#{inspect c}"
-    {:ok, [c], state}
+    {:ok, c, state}
   end
 
   def runP({:parser, f}, %State{}=state) do

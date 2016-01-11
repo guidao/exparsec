@@ -20,7 +20,7 @@ defmodule Exparsec.Combo do
   def skipMany(p) do
     {:parser, fn(state)->
       case runP(p, state) do
-        {:ok, val, nstate} ->
+        {:ok, _val, nstate} ->
           runP(skipMany(p), nstate)
         {:error, reason, nstate} ->
           {:ok, [], nstate}
@@ -31,7 +31,7 @@ defmodule Exparsec.Combo do
   def skipMany1(p) do
     {:parser, fn(state)->
       case runP(p, state) do
-        {:ok, val, nstate} ->
+        {:ok, _val, nstate} ->
           runP(skipMany(p), nstate)
         {:error, reason, nstate} ->
           {:error, reason, nstate}
