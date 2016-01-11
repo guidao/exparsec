@@ -10,42 +10,46 @@ defmodule Exparsec do
   import Exparsec.Util
 
   def char(input) do
-    input |> oneof |> return
+    input |> oneof |> tokenPrim
   end
 
   def letter do
-    return(oneof('abcdefghijklmnopkrstuvwxyz'))
+    tokenPrim(oneof('abcdefghijklmnopkrstuvwxyz'))
   end
 
   def symbol do
-    return(oneof '!$%&|*+ -/: <=? >@^_~#')
+    tokenPrim(oneof '!$%&|*+ -/: <=? >@^_~#')
   end
 
   def digit do
-    return(oneof '0123456789')
+    tokenPrim(oneof '0123456789')
   end
 
   def atom do
     first = (&letter/0) <|> (&symbol/0)
     rest = many((&letter/0) <|> (&digit/0) <|> (&symbol/0))
-    first >>> rest
+    com = first >>> rest
+    bind(com, fn([val])-> return([List.to_atom(val)]) end)
   end
 
   def string do
     c = char '"'
-    str = noneof('"') |> return
-    c >>> str >>> c
+    str = noneof('"') |> tokenPrim
+    com = c >>> str >>> c
+    bind(com, fn([val])->
+      return([List.to_string(val)])
+    end)
   end
 
   def space do
-    return(oneof ' \t')
+    tokenPrim(oneof ' \t')
   end
 
   def spaces do
     many1(space)
   end
   def number do
-    many1(digit)
+    bind(many1(digit), fn([val])-> return([List.to_integer(val)]) end)
   end
 
   def expr do

@@ -1,5 +1,5 @@
 defmodule Exparsec.Util do
-  def return(fun) do
+  def tokenPrim(fun) do
     {:parser, fn(state)->
       case state.input do
         [c|cs] ->
@@ -15,13 +15,35 @@ defmodule Exparsec.Util do
     end}
   end
 
+  def return(val) do
+    {:parser, fn(state)->
+      {:ok, val, state}
+    end}
+  end
+
+  def bind(p, f) do
+    {:parser, fn(state)->
+      case runP(p, state) do
+        {:ok, val, nstate} ->
+          runP(f.(val), nstate)
+        {:error, reason, nstate} ->
+          {:error, reason, nstate}
+      end
+    end}
+  end
+
+ 
+
   def fix_return([_|_] = c, {:ok, val, state}) do
+    IO.puts "c:#{inspect c}, val:#{inspect val}"
     {:ok, c ++ val, state}
   end
   def fix_return(c, {:ok, val, state}) do
+    IO.puts "c:#{inspect c}, val:#{inspect val}"
     {:ok, [c|val], state}
   end
   def fix_return(c, {:error, reason, state}) do
+    IO.puts "c:#{inspect c}"
     {:ok, [c], state}
   end
 

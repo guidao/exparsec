@@ -100,7 +100,7 @@ defmodule Exparsec.Combo do
         {:ok, val, nstate} ->
           case runP(sep, nstate) do
             {:ok, val2, nstate2} ->
-              fix_return(val++val2, runP(sepBy(p, sep), nstate2))
+              fix_return(val ++ val2, runP(sepBy(p, sep), nstate2))
             {:error, reason, nstate2} ->
               {:ok, [], nstate2}
           end
@@ -129,8 +129,7 @@ defmodule Exparsec.Combo do
     {:parser, fn(state)->
       case runP(p, state) do
         {:ok, val, nstate} ->
-          IO.puts "pval:#{inspect val}"
-          runP(x, nstate)
+          fix_return(val, runP(x, nstate))
         {:error, val, nstate} ->
           {:error, val, nstate}
       end
