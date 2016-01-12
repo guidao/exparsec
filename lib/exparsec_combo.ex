@@ -1,21 +1,5 @@
 defmodule Exparsec.Combo do
-
   import Exparsec.Util
-  # def skipMany(test) do
-  #   {:parser, fn(state)->
-  #     case state.input do
-  #       [c|cs] ->
-  #         case test.(c) do
-  #           true ->
-  #             Exparsec.runP(skipMany(test), %State{state|input: cs})
-  #           false ->
-  #             {:ok, [], state}
-  #         end
-  #       [] ->
-  #         {:ok, [], state} 
-  #     end
-  #   end}
-  # end
 
   def skipMany(p) do
     {:parser, fn(state)->
@@ -39,22 +23,6 @@ defmodule Exparsec.Combo do
     end}
   end
 
-  # def skipMany1(test) do
-  #   {:parser, fn(state)->
-  #     case state.input do
-  #       [c|cs] ->
-  #         case test.(c) do
-  #           true ->
-  #             Exparsec.runP(skipMany(test), %State{state|input: cs})
-  #           false ->
-  #             {:error, "skip many not match one", state}
-  #         end
-  #       [] ->
-  #         {:error, "skipMany not match one", state}
-  #     end
-  #   end}
-  # end
-
 
   def many({:parser, _}=p) do
     {:parser, fn(state)->
@@ -66,22 +34,6 @@ defmodule Exparsec.Combo do
       end
     end}
   end
-
-  # def many(test) do
-  #   {:parser, fn(state)->
-  #     case state.input do
-  #       [c|cs] ->
-  #         case test.(c) do
-  #           true ->
-  #             Exparsec.fix_return(c, Exparsec.runP(many(test), %State{state|input: cs}))
-  #           false ->
-  #             {:ok, [], state}
-  #         end
-  #       [] ->
-  #         {:ok, [], state}
-  #     end
-  #   end}
-  # end
 
   def many1(p) do
     {:parser, fn(state)->
