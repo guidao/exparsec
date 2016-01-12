@@ -60,7 +60,7 @@ defmodule Exparsec.Combo do
     {:parser, fn(state)->
       case runP(p, state) do
         {:ok, val, nstate} ->
-          fix_return(val, runP(p, nstate))
+          fix_return(val, runP(many(p), nstate))
         error ->
           error
       end
@@ -88,8 +88,8 @@ defmodule Exparsec.Combo do
       case runP(p, state) do
         {:ok, val, nstate} ->
           fix_return(val, runP(many(p), nstate))
-        error ->
-          error
+        {:error, reason, nstate} ->
+          {:error, reason, nstate}
       end
     end}
   end

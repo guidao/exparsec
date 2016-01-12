@@ -14,7 +14,7 @@ defmodule Exparsec do
   end
 
   def letter do
-    tokenPrim(oneof('abcdefghijklmnopkrstuvwxyz'))
+    tokenPrim(oneof('abcdefghijklmnopqrstuvwxyz'))
   end
 
   def symbol do
@@ -29,15 +29,16 @@ defmodule Exparsec do
     first = (&letter/0) <|> (&symbol/0)
     rest = many((&letter/0) <|> (&digit/0) <|> (&symbol/0))
     com = first >>> rest
-    bind(com, fn([val])-> return([List.to_atom(val)]) end)
+    bind(com, fn(val)-> return([List.to_atom(List.flatten(val))]) end)
   end
 
   def string do
     c = char '"'
-    str = noneof('"') |> tokenPrim
-    com = c >>> str >>> c
-    bind(com, fn([val])->
-      return([List.to_string(val)])
+    str = noneof('"') |> tokenPrim |> many
+    com = combo(c,combo(str,c))
+    #com = c >>> (str >>> c)
+    bind(com, fn(val)->
+      return([List.to_string(List.flatten(val))])
     end)
   end
 
@@ -49,7 +50,7 @@ defmodule Exparsec do
     many1(space)
   end
   def number do
-    bind(many1(digit), fn([val])-> return([List.to_integer(val)]) end)
+    bind(many1(digit), fn(val)-> return([List.to_integer(List.flatten(val))]) end)
   end
 
   def expr do
