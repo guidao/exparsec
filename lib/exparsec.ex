@@ -18,7 +18,7 @@ defmodule Exparsec do
   end
 
   def symbol do
-    tokenPrim(oneof '!$%&|*+ -/: <=? >@^_~#')
+    tokenPrim(oneof '!$%&|*+-/:<=?>@^_~#')
   end
 
   def digit do

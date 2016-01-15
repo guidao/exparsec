@@ -32,7 +32,7 @@ defmodule Exparsec.Util do
     end}
   end
 
- 
+
   # def fix_return([c], {:ok, [val], state}) do
   #   IO.puts "c:#{inspect c}, val:#{inspect val}"
   #   case val do
