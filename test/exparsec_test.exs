@@ -68,7 +68,7 @@ defmodule ExparsecTest do
     # read_expr expr, 'abc'
     # read_expr expr, '123'
     # read_expr expr, '"adwe23gw"'
-    read_expr expr, '(a b c)'
+    # read_expr expr, '(a b c)'
     # read_expr expr, '(1 2 3)'
     # read_expr expr, '(a b . c d)'
     # read_expr expr, '\'(1 2 3)'
